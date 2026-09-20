@@ -1,0 +1,30 @@
+prefix  = @prefix@
+bindir  = @bindir@
+DESTDIR =
+INSTALL = install
+
+all: arc
+
+arc: arc.py
+@TAB@cp arc.py arc
+@TAB@chmod +x arc
+
+check: arc
+@TAB@./arc -h > /dev/null
+@TAB@./arc -t --version > /dev/null
+@TAB@@echo "check: ok"
+
+install: arc
+@TAB@$(INSTALL) -d $(DESTDIR)$(bindir)
+@TAB@$(INSTALL) -m 755 arc $(DESTDIR)$(bindir)/arc
+
+uninstall:
+@TAB@rm -f $(DESTDIR)$(bindir)/arc
+
+clean:
+@TAB@rm -f arc
+
+distclean: clean
+@TAB@rm -f Makefile
+
+.PHONY: all check install uninstall clean distclean

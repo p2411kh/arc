@@ -1,0 +1,53 @@
+#!/bin/sh
+# configure для arc: ./configure [--prefix=DIR] [--bindir=DIR]
+
+prefix=/usr/local
+bindir=
+
+usage() {
+    cat << USAGE
+Использование: ./configure [опции]
+
+  --prefix=DIR   куда ставить (по умолчанию: $prefix)
+  --bindir=DIR   куда класть исполняемый файл (по умолчанию: PREFIX/bin)
+  -h, --help     эта справка
+
+Пример для установки без root:
+  ./configure --prefix=\$HOME/.local
+USAGE
+}
+
+for arg in "$@"; do
+    case $arg in
+        --prefix=*) prefix=${arg#*=} ;;
+        --bindir=*) bindir=${arg#*=} ;;
+        -h|--help)  usage; exit 0 ;;
+        *) echo "configure: неизвестная опция '$arg'" >&2; usage >&2; exit 1 ;;
+    esac
+done
+
+[ -n "$bindir" ] || bindir=$prefix/bin
+
+check() {  # check <программа> <required|optional>
+    printf 'проверка %s... ' "$1"
+    if command -v "$1" > /dev/null 2>&1; then
+        echo "найден"
+    elif [ "$2" = required ]; then
+        echo "НЕ НАЙДЕН"
+        echo "configure: ошибка: нужен $1" >&2
+        exit 1
+    else
+        echo "не найден (нужен для соответствующего режима arc)"
+    fi
+}
+
+check python3 required
+check tar optional
+check zip optional
+check unzip optional
+
+TAB=$(printf '\t')
+sed -e "s|@prefix@|$prefix|g" -e "s|@bindir@|$bindir|g" -e "s|@TAB@|$TAB|g" Makefile.in > Makefile
+
+echo "configure: создан Makefile (prefix=$prefix)"
+echo "Дальше: make && make install"
